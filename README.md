@@ -107,4 +107,41 @@ IF ERRORLEVEL 5 ECHO NO
 IF ERRORLEVEL 4 ECHO YES
 ```
 
-This should output `YES`.
+This should output `YES`.  
+This gives us a total of `23` bytes!
+
+```assembly
+;
+; Make4.asm
+;
+
+; Constant - the file size
+FILESIZE EQU (eof-$$)
+
+; All COM programs start at 0x100
+org 0x100
+
+; Saves the filename to create in DX
+mov dx, filename
+
+; DOS interrupt 21,5B - Create File
+pop cx					; File attributes (pops 0 as 0xFF is invalid - http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)
+mov ah, 0x5B
+int 0x21
+
+; DOS interrupt 21,40 - Write To File
+xchg bx, ax				; File handle (XCHG takes one less byte to encode)
+mov cl, FILESIZE		; Bytes to write (CH is already 0)
+mov dx, si				; Buffer to write (SI never changed and points to 0x100)
+mov ah, 0x40
+int 0x21
+
+; DOS interrupt 21,4C - Terminate Program
+mov ax, 0x4C04			; Return value of 04 is in AL
+int 0x21
+	
+; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
+filename: db '4'
+eof:
+```
+
