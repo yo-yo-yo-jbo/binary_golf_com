@@ -52,7 +52,7 @@ int 0x21
 
 ; DOS interrupt 21,40 - Write To File
 xchg bx, ax				; File handle (XCHG takes one less byte to encode)
-mov cl, FILESIZE		; Bytes to write (CH is already 0)
+mov cl, FILESIZE			; Bytes to write (CH is already 0)
 mov dx, si				; Buffer to write (SI never changed and points to 0x100)
 mov ah, 0x40
 int 0x21
