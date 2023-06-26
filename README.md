@@ -37,7 +37,7 @@ Here's my code, followed by some explanations:
 ;
 
 ; Constant - the file size
-FILESIZE EQU (msg-$$+1)
+FILESIZE EQU (eof-$$)
 
 ; All COM programs start at 0x100
 org 0x100
@@ -52,7 +52,7 @@ int 0x21
 
 ; DOS interrupt 21,40 - Write To File
 xchg bx, ax				; File handle (XCHG takes one less byte to encode)
-mov cl, FILESIZE		        ; Bytes to write (CH is already 0)
+mov cl, FILESIZE		; Bytes to write (CH is already 0)
 mov dx, si				; Buffer to write (SI never changed and points to 0x100)
 mov ah, 0x40
 int 0x21
@@ -64,8 +64,9 @@ int 0x10
 ; DOS interrupt 20 - Terminate Program
 int 0x20
 	
-; Maintains the data and saves the NUL terminator since post-program chunk if full of zeros
+; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
 filename: db '4'
+eof:
 ```
 
 Let's examine it:
