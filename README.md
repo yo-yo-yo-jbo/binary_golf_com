@@ -36,14 +36,14 @@ Here's my code, followed by some explanations:
 ; Make4.asm
 ;
 
-; Fine-tunable - the file size
+; Constant - the file size
 FILESIZE EQU (msg-$$+1)
 
 ; All COM programs start at 0x100
 org 0x100
 
 ; Saves the filename to create in DX
-mov dx, msg
+mov dx, filename
 
 ; DOS interrupt 21,5B - Create File
 pop cx					; File attributes (pops 0 as 0xFF is invalid - http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)
@@ -52,7 +52,7 @@ int 0x21
 
 ; DOS interrupt 21,40 - Write To File
 xchg bx, ax				; File handle (XCHG takes one less byte to encode)
-mov cl, FILESIZE		; Bytes to write (CH is already 0)
+mov cl, FILESIZE		        ; Bytes to write (CH is already 0)
 mov dx, si				; Buffer to write (SI never changed and points to 0x100)
 mov ah, 0x40
 int 0x21
@@ -65,5 +65,20 @@ int 0x10
 int 0x20
 	
 ; Maintains the data and saves the NUL terminator since post-program chunk if full of zeros
-msg: db '4'
+filename: db '4'
 ```
+
+Let's examine it:
+1. `FILESIZE` is just a constant, like `#define` in C, and lets me reuse that value later. It does not encode as any bytes on its own.
+2. `org 0x100` is a directive that tells NASM to assume program is loaded at that address. It does not encode as any bytes.
+3. `mov dx, msg` readies the `dx` register to save the filename to create. Note how I save one byte in `msg` - normally you'd have to add a NUL terminator with `db '4', 0`. This is a costly instruction that takes 3 bytes!
+4. I use `pop cx` which takes one byte. Since the initial value of `cx` is `0xff` and since `cx` is used as the file attributes to create, I cannot use `0xff` (see [here](http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)). I use the fact the stack is full of zeros to effectively assign zero to `cx` - I use that fact later to save a single byte.
+5. I set `ah` to be `0x5B` and call `int 21h`, which creates a file with the filename pointed by `dx` and the attributes in `cx`.
+6. I use `xchg bx, ax` since I need the file handle in `bx` for the next interrupt. It's expected that the handle number is going to be `5`, but I wasn't able to use that fact to lowe the number of encoded bytes.
+7. `cx` is set to the file size. Note I use the fact `ch` is already zero - therefore using `mov` on `cl` alone, which takes one less byte.
+8. I need to set `dx` to `0x100`, and do so with `mov dx, si`, which takes one less byte. I use the fact `si` never got modified and it's initially `0x100`.
+9. I assign `0x40` to `ah` and call the DOS interrupt `21h` again, which writes to the file handle given at `bx`. It writes the amount of bytes in `cx`, from the buffer pointed by `dx`.
+10. I assign `ah` to `0x0e` and `al` to the character `4` in one go - by assigning `0x0E34` to `ax`. Then I call `int 10h` which is a [BIOS interrupt](https://en.wikipedia.org/wiki/BIOS_interrupt_call) that writes the character in `al` to the terminal.
+12. I quit the program by calling `int 20h`.
+
+The entire program takes `25` bytes - not a bad start!
