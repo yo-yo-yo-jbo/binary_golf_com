@@ -58,7 +58,7 @@ mov ah, 0x40
 int 0x21
 
 ; BIOS interrupt 10,0E - Write character
-mov ax, 0x0E34			; Character + interrupt number
+mov ax, 0x0E34				; Character + interrupt number
 int 0x10
 
 ; DOS interrupt 20 - Terminate Program
