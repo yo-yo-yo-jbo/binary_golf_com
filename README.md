@@ -82,4 +82,9 @@ Let's examine it:
 10. I assign `ah` to `0x0e` and `al` to the character `4` in one go - by assigning `0x0E34` to `ax`. Then I call `int 10h` which is a [BIOS interrupt](https://en.wikipedia.org/wiki/BIOS_interrupt_call) that writes the character in `al` to the terminal.
 12. I quit the program by calling `int 20h`.
 
-The entire program takes `25` bytes - not a bad start!
+The entire program takes `25` bytes - not a bad start!  
+You can compile with the following command:
+
+```shell
+nasm -f bin -o MAKE4.COM make4.asm
+```
