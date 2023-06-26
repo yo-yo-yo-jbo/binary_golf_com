@@ -88,3 +88,14 @@ You can compile with the following command:
 ```shell
 nasm -f bin -o MAKE4.COM make4.asm
 ```
+
+## Exit codes
+One thing I noticed is that I printed `4` but could easily just return `4`, which saves one instruction...  
+Instead of printing `4` and calling `int 0x20`, I could just use DOS int21h, vector=`4C`:
+
+```assembly
+mov ax, 0x4C04			; Return value of 04 is in AL
+int 0x21
+```
+
+The problem is that DOSBox seems to set `ERRORLEVEL` to either `1` or `0`, rather than actually using the return value.
