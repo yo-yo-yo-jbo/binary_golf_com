@@ -98,4 +98,13 @@ mov ax, 0x4C04			; Return value of 04 is in AL
 int 0x21
 ```
 
-The problem is that DOSBox seems to set `ERRORLEVEL` to either `1` or `0`, rather than actually using the return value.
+The problem is that DOSBox seems to set `ERRORLEVEL` to either `1` or `0`, rather than actually using the return value.  
+However, [DOSBox-X](https://dosbox-x.com/) accurately does this - we use `IF ERRORLEVEL` instructions to distinguish exit codes since `%ERRORLEVEL%` variable is not well defined:
+
+```shell
+MAKE4.COM
+IF ERRORLEVEL 5 ECHO NO
+IF ERRORLEVEL 4 ECHO YES
+```
+
+This should output `YES`.
