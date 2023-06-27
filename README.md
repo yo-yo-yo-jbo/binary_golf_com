@@ -116,14 +116,14 @@ This gives us a total of `23` bytes!
 ;
 
 ; Constant - the file size
-FILESIZE EQU (eof-$$)
+FILE_SIZE EQU (eof-$$)
 
 ; All COM programs start at 0x100
 org 0x100
 
 ;
 ; BA 16 01
-mov dx, filename			; Saves the filename to create in DX
+mov dx, filename		; Saves the filename to create in DX
 
 ;
 ; 59
@@ -140,7 +140,7 @@ int 0x21				; DOS interrupt 21,5B - Create File
 ; B4 40
 ; CD 21
 xchg bx, ax				; File handle (XCHG takes one less byte to encode)
-mov cl, FILESIZE			; Bytes to write (CH is already 0 due to previous POP instruction)
+mov cl, FILE_SIZE		; Bytes to write (CH is already 0 due to previous POP instruction)
 mov dx, si				; Buffer to write (SI never changed and points to 0x100 - http://www.fysnet.net/yourhelp.htm)
 mov ah, 0x40
 int 0x21				; DOS interrupt 21,40 - Write To File
@@ -148,11 +148,11 @@ int 0x21				; DOS interrupt 21,40 - Write To File
 ;
 ; B8 04 4C
 ; CD 21
-mov ax, 0x4C04				; Return value of 04 is in AL
+mov ax, 0x4C04			; Return value of 04 is in AL
 int 0x21				; DOS interrupt 21,4C - Terminate Program
 
 ; 34
-filename: db '4'			; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
+filename: db '4'		; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
 eof:
 ```
 
