@@ -140,7 +140,7 @@ int 0x21				; DOS interrupt 21,5B - Create File
 ; B4 40
 ; CD 21
 xchg bx, ax				; File handle (XCHG takes one less byte to encode)
-mov cl, FILE_SIZE		; Bytes to write (CH is already 0 due to previous POP instruction)
+mov cl, FILE_SIZE			; Bytes to write (CH is already 0 due to previous POP instruction)
 mov dx, si				; Buffer to write (SI never changed and points to 0x100 - http://www.fysnet.net/yourhelp.htm)
 mov ah, 0x40
 int 0x21				; DOS interrupt 21,40 - Write To File
@@ -148,11 +148,11 @@ int 0x21				; DOS interrupt 21,40 - Write To File
 ;
 ; B8 04 4C
 ; CD 21
-mov ax, 0x4C04			; Return value of 04 is in AL
+mov ax, 0x4C04				; Return value of 04 is in AL
 int 0x21				; DOS interrupt 21,4C - Terminate Program
 
 ; 34
-filename: db '4'		; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
+filename: db '4'			; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
 eof:
 ```
 
