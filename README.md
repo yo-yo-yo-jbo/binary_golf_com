@@ -159,4 +159,5 @@ eof:
 ## Failed ideas
 - One more idea that I had (which wasn't successful) is to somehow save the repetition of `int 0x21` - we do it 3 times so it costs 6 bytes.  
 One idea that I had was living off the land: in the [PSP](https://en.wikipedia.org/wiki/Program_Segment_Prefix) at offset `0x50` we see `Unix-like far call entry into DOS (always contains INT 21h + RETF)`. The `INT 21h` part fits us perfectly, but `RETF` is problematic. In fact, even if I could magically make it `C3` (normal `RET`) it'd still require at least `2` bytes each time to `CALL` (calling an address takes `3` bytes, calling a register takes `2` bytes).
-- A similar idea was to reuse addresses we know such as `0:0` (the vector table). Again - too costly to use.
+- A similar idea was to reuse addresses we know such as `0:0` (the [Interrupt Vector Table](https://en.wikipedia.org/wiki/Interrupt_vector_table)). Again - too costly to use.
+- Since we use `pop` once and since `sp` starts as `FFFE`, the next `pop` instruction jumps to address `0` (since the stack shrinks up with a wrap-around). I could use that to run a `ret` instruction (single byte) since address `0` is the first byte of the [PSP](https://en.wikipedia.org/wiki/Program_Segment_Prefix), which encodes `INT 20h`. Sadly, that interrupt does not set the return value.
