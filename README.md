@@ -226,6 +226,8 @@ Can we do better? Note we encode the character `4` twice! Well, I was able to ge
 1. Replace the `mov dx, si` with `xchg dx, si`. This still encodes as `2` bytes, but now makes `si` point to the last byte of the file (where the character `4` is). Of course, `dx` still gets the `0x100` value from `si`, which is the desired effect.
 2. Replace `mov al, '4'` with `lodsb`! That instruction takes `1` byte only and assigns the value of `ds:[si]` to `al`.
 
+Here is the new code:
+
 ```assembly
 ;
 ; Make4.asm
