@@ -285,6 +285,22 @@ The file's contents are already captured in the code here, but here are the cont
 ba 15 01 91 b4 5b cd 21 93 b1 16 87 d6 b4 40 cd 21 ac cd 29 c3 34
 ```
 
+## More Binary Golf
+Besides COM, there were other Binary Golf targets, including:
+
+### Shell script
+This might look naive, but here's what I got:
+
+```shell
+#!
+cp * 4
+echo 4
+```
+
+This takes `16` bytes to code. The interesting part here is the missing `#!` ([Shebang](https://en.wikipedia.org/wiki/Shebang_(Unix))).  
+Another idea here is to use `*` to copy - this assumes my script runs alone in the directory.  
+Also, `vim` and other editors usually finish with a linebreak (after `echo 4`) so I made sure to remove it.
+
 ## Conclusions
 This has been a fun challenge! We have covered a lot of cool tricks to minimize our payload, including:
 1. The structure of COM files and using some interesting [initial register values](http://www.fysnet.net/yourhelp.htm).
