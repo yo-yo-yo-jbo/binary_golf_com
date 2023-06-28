@@ -25,6 +25,7 @@ There are some nice optimizations I discovered while doing this challenge:
 4. The memory after the program is filled with zeros. Since I needed the NUL terminated string `4\x00` it saved me one byte.
 5. There's very good documentation regarding initial register values when your program starts running ([here](http://www.fysnet.net/yourhelp.htm)). Specifically, I used the fact that `si` is `0x100` to my benefit, and the initial value of `0xFF` assigned to `CX` had to be dealt with.
 6. Interrupts generally maintain register values. I use that for my benefit.
+7. Since the stack initially contains a zero word, I can `ret` and that jumps to address `0` at the [PSP](https://en.wikipedia.org/wiki/Program_Segment_Prefix), which encodes `int 0x20`. This is fully reliable and takes one byte intead of 2!
 
 ## Code
 Here's my code, followed by some explanations:
@@ -35,7 +36,7 @@ Here's my code, followed by some explanations:
 ;
 
 ; Constant - the file size
-FILESIZE EQU (eof-$$)
+FILE_SIZE EQU (eof-$$)
 
 ; All COM programs start at 0x100
 org 0x100
@@ -44,7 +45,7 @@ org 0x100
 mov dx, filename
 
 ; DOS interrupt 21,5B - Create File
-pop cx					; File attributes (pops 0 as 0xFF is invalid - http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)
+xchg ax, cx				; File attributes (pops 0 as 0xFF is invalid - http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)
 mov ah, 0x5B
 int 0x21
 
@@ -59,8 +60,8 @@ int 0x21
 mov ax, 0x0E34				; Character + interrupt number
 int 0x10
 
-; DOS interrupt 20 - Terminate Program
-int 0x20
+; DOS interrupt 20 - Terminate Program through PSP
+ret
 	
 ; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
 filename: db '4'
