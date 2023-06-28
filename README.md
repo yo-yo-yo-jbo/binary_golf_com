@@ -6,10 +6,8 @@ This year (2023) the task is simple: self-copy to a file called `4` and either o
 Obviously scripting would be easy, but I've decided to go with [COM](https://en.wikipedia.org/wiki/COM_file)!
 
 ## COM background
-Why did I choose COM? Well, a few reasons:
-1. As I mentioned, I wanted an opportunity to have fun with Real Mode assembly.
-2. COM files do not have headers! They just get loaded to memory.
-3. COM files are loaded at a predefined address (`0x100`).
+COM files are type of executable files used throughout various DOS operating systems, including `MS-DOS`. They do not have any headers and are just loaded to memory at address `ip=0x100`. Their code segment, data segment and stack segments all have the same value.  
+These facts make COM files very attractive for minimalism, as we can literally write code immidiately with no headers and use the fact they're loaded to a predefined address. Obviously I intend to use interrupts extensively to get file operations done.
 
 ## Plan of action
 My plan is simple - use software interrupts (mostly [DOS API](https://en.wikipedia.org/wiki/DOS_API) that usually revolves around `int 21h`) and minimize assembly encoding. Specifically:
