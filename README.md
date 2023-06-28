@@ -263,7 +263,7 @@ int 0x21			; DOS interrupt 21,40 - Write To File
 
 ; AC
 ; CD 29
-lodsb				; Load the last byte of the file in AL - was set when exchanging DX and SI before
+lodsb				; Load the last byte of the file in AL - was set when previously exchanging DX and SI
 int 0x29			; DOS interrupt 29 - Fast Console Output
 
 ; C3
