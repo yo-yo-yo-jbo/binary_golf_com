@@ -41,47 +41,55 @@ FILE_SIZE EQU (eof-$$)
 ; All COM programs start at 0x100
 org 0x100
 
-; Saves the filename to create in DX
-mov dx, filename
+; BA 17 01
+mov dx, filename		; Saves the filename to create in DX
 
-; DOS interrupt 21,5B - Create File
-xchg ax, cx				; File attributes (pops 0 as 0xFF is invalid - http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)
+; 91
+; B4 5B
+; CD 21
+xchg ax, cx			; File attributes (sets to 0 as 0xFF is invalid - http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)
 mov ah, 0x5B
-int 0x21
+int 0x21			; DOS interrupt 21,5B - Create File
 
-; DOS interrupt 21,40 - Write To File
-xchg bx, ax				; File handle (XCHG takes one less byte to encode)
-mov cl, FILESIZE			; Bytes to write (CH is already 0)
-mov dx, si				; Buffer to write (SI never changed and points to 0x100)
+; 93
+; B1 18
+; 89 F2
+; B4 40
+; CD 21
+xchg bx, ax			; File handle (XCHG takes one less byte to encode)
+mov cl, FILE_SIZE		; Bytes to write (CH is already 0)
+mov dx, si			; Buffer to write (SI never changed and points to 0x100)
 mov ah, 0x40
-int 0x21
+int 0x21			; DOS interrupt 21,40 - Write To File
 
-; BIOS interrupt 10,0E - Write character
-mov ax, 0x0E34				; Character + interrupt number
-int 0x10
+; B8 34 0E
+; CD 10
+mov ax, 0x0E34			; Character + interrupt number
+int 0x10			; BIOS interrupt 10,0E - Write character
 
-; DOS interrupt 20 - Terminate Program through PSP
-ret
+; C3
+ret				; DOS interrupt 20 - Terminate Program through PSP
 	
-; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
-filename: db '4'
+; 34
+filename: db '4'		; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
 eof:
 ```
 
 Let's examine it:
-1. `FILESIZE` is just a constant, like `#define` in C, and lets me reuse that value later. It does not encode as any bytes on its own.
+1. `FILE_SIZE` is just a constant, like `#define` in C, and lets me reuse that value later. It does not encode as any bytes on its own.
 2. `org 0x100` is a directive that tells NASM to assume program is loaded at that address. It does not encode as any bytes.
-3. `mov dx, msg` readies the `dx` register to save the filename to create. Note how I save one byte in `msg` - normally you'd have to add a NUL terminator with `db '4', 0`. This is a costly instruction that takes 3 bytes!
-4. I use `pop cx` which takes one byte. Since the initial value of `cx` is `0xff` and since `cx` is used as the file attributes to create, I cannot use `0xff` (see [here](http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)). I use the fact the stack is full of zeros to effectively assign zero to `cx` - I use that fact later to save a single byte.
-5. I set `ah` to be `0x5B` and call `int 21h`, which creates a file with the filename pointed by `dx` and the attributes in `cx`.
-6. I use `xchg bx, ax` since I need the file handle in `bx` for the next interrupt. It's expected that the handle number is going to be `5`, but I wasn't able to use that fact to lowe the number of encoded bytes.
+3. `mov dx, msg` readies the `dx` register to save the filename to create. This is a costly instruction that takes 3 bytes!
+4. I use `xchg ax, cx` which takes one byte (generally `xchg` takes 2 bytes but `ax` register encoding makes it 1 byte). Since the initial value of `cx` is `0xff` and since `cx` is used as the file attributes to create, I cannot use `0xff` (see [here](http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)).
+5. I set `ah` to `0x5B` and call `int 21h`, which creates a file with the filename pointed by `dx` and the attributes in `cx`.
+6. I use `xchg bx, ax` since I need the file handle in `bx` for the next interrupt. It's expected that the handle number is going to be `5`, but I wasn't able to use that fact to lower the number of encoded bytes - that `xchg` takes a single byte due to `ax` being present.
 7. `cx` is set to the file size. Note I use the fact `ch` is already zero - therefore using `mov` on `cl` alone, which takes one less byte.
 8. I need to set `dx` to `0x100`, and do so with `mov dx, si`, which takes one less byte. I use the fact `si` never got modified and it's initially `0x100`.
 9. I assign `0x40` to `ah` and call the DOS interrupt `21h` again, which writes to the file handle given at `bx`. It writes the amount of bytes in `cx`, from the buffer pointed by `dx`.
 10. I assign `ah` to `0x0e` and `al` to the character `4` in one go - by assigning `0x0E34` to `ax`. Then I call `int 10h` which is a [BIOS interrupt](https://en.wikipedia.org/wiki/BIOS_interrupt_call) that writes the character in `al` to the terminal.
-12. I quit the program by calling `int 20h`.
+12. I quit the program by calling `int 20h` but in a special way - since the initial stack has a zero, doing a `ret` instruction jumps to address `0`. Well, as I mentioned - that's where the [PSP](https://en.wikipedia.org/wiki/Program_Segment_Prefix) is, and it must start with the bytes `CD 20` which encode `int 20h` - saving one byte.
+13. Note the data at the end encodes `4` for the filename without a NUL terminator - I use the fact that the program is loaded to an area full of zeros to save one extra byte.
 
-The entire program takes `25` bytes - not a bad start!  
+The entire program takes `24` bytes - not a bad start!  
 You can compile with the following command:
 
 ```shell
@@ -125,12 +133,12 @@ org 0x100
 mov dx, filename		; Saves the filename to create in DX
 
 ;
-; 59
+; 91
 ; B4 5B
 ; CD 21
-pop cx					; File attributes (pops 0 as 0xFF is invalid - http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)
+xchg ax, cx			; File attributes (sets to 0 as 0xFF is invalid - http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)
 mov ah, 0x5B
-int 0x21				; DOS interrupt 21,5B - Create File
+int 0x21			; DOS interrupt 21,5B - Create File
 
 ;
 ; 93
@@ -138,20 +146,20 @@ int 0x21				; DOS interrupt 21,5B - Create File
 ; 89 F2
 ; B4 40
 ; CD 21
-xchg bx, ax				; File handle (XCHG takes one less byte to encode)
-mov cl, FILE_SIZE			; Bytes to write (CH is already 0 due to previous POP instruction)
-mov dx, si				; Buffer to write (SI never changed and points to 0x100 - http://www.fysnet.net/yourhelp.htm)
+xchg bx, ax			; File handle (XCHG takes one less byte to encode)
+mov cl, FILE_SIZE		; Bytes to write (CH is already 0 due to previous POP instruction)
+mov dx, si			; Buffer to write (SI never changed and points to 0x100 - http://www.fysnet.net/yourhelp.htm)
 mov ah, 0x40
-int 0x21				; DOS interrupt 21,40 - Write To File
+int 0x21			; DOS interrupt 21,40 - Write To File
 
 ;
 ; B8 04 4C
 ; CD 21
-mov ax, 0x4C04				; Return value of 04 is in AL
-int 0x21				; DOS interrupt 21,4C - Terminate Program
+mov ax, 0x4C04			; Return value of 04 is in AL
+int 0x21			; DOS interrupt 21,4C - Terminate Program
 
 ; 34
-filename: db '4'			; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
+filename: db '4'		; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
 eof:
 ```
 
@@ -159,5 +167,5 @@ eof:
 - One more idea that I had (which wasn't successful) is to somehow save the repetition of `int 0x21` - we do it 3 times so it costs 6 bytes.  
 One idea that I had was living off the land: in the [PSP](https://en.wikipedia.org/wiki/Program_Segment_Prefix) at offset `0x50` we see `Unix-like far call entry into DOS (always contains INT 21h + RETF)`. The `INT 21h` part fits us perfectly, but `RETF` is problematic. In fact, even if I could magically make it `C3` (normal `RET`) it'd still require at least `2` bytes each time to `CALL` (calling an address takes `3` bytes, calling a register takes `2` bytes).
 - A similar idea was to reuse addresses we know such as `0:0` (the [Interrupt Vector Table](https://en.wikipedia.org/wiki/Interrupt_vector_table)). Again - too costly to use.
-- Since `sp` starts as `FFFE`, and since that chunk of memory is full of zeros, the next `ret` instruction jumps to address `0`. I could use that to run a `ret` instruction (single byte) since address `0` is the first byte of the [PSP](https://en.wikipedia.org/wiki/Program_Segment_Prefix), which encodes `INT 20h`. I could replace the existing `pop cx` instruction with `xchg cx, ax` which has a similar effect and still takes a single byte to encode. Sadly, that interrupt does not set the return value. To see if I could somehow return something from `INT 20h`, I examined the [DOSBox-X](https://dosbox-x.com) source code. The handler for `INT 21h,4C` calls `DOS_Terminate` with the `DL` value as the exit code.
+- I still had hopes that somehow I could magically call `INT 20h` and affect the return code. I examined the [DOSBox-X](https://dosbox-x.com) source code and it seems the handler for `INT 21h,4C` calls `DOS_Terminate` with the `DL` value as the exit code. This seems to be the only viable way to save the exit code.
 - 
