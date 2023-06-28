@@ -172,7 +172,7 @@ One idea that I had was living off the land: in the [PSP](https://en.wikipedia.o
 - I thought of writing directly to memory instead of outputting `4`. You can write a character to `0xB800:0` and it will "magically" appear on the screen due to [MMIO](https://en.wikipedia.org/wiki/Memory-mapped_I/O_and_port-mapped_I/O). Unfortunately, I was not able to encode the relevant instructions and gain anything. Also, I was not sure if this is counted as a true output because it does not really write to `STDOUT`, so it doesn't work if the caller redirects output (let's say, to a file).
 
 ## Fast Console Output
-Looking at [Ralph Brown's Interrupt List](http://www.ctyme.com/hosting/index.htm) I discovered `INT 29h` - Fast Console Output. It will output the character in the `AL` register and *does not require setting any other register values*, which is great for my efforts to minimize the payload length. This means we can use the `RET` idea to return to PSP address `0` after printing. This is still `23` bytes, but at least runs on DOSBox:
+Looking at [Ralf Brown's Interrupt List](http://www.ctyme.com/hosting/index.htm) I discovered `INT 29h` - Fast Console Output. It will output the character in the `AL` register and *does not require setting any other register values*, which is great for my efforts to minimize the payload length. This means we can use the `RET` idea to return to PSP address `0` after printing. This is still `23` bytes, but at least runs on DOSBox:
 
 ```assembly
 ;
@@ -291,7 +291,7 @@ This has been a fun challenge! We have covered a lot of cool tricks to minimize 
 2. Using the [PSP](https://en.wikipedia.org/wiki/Program_Segment_Prefix) to return to address 0 and calling `INT 20h`.
 3. Using `xchg` instead of `mov` can cost one less byte if `ax` is involved.
 4. Using `lodsb` to read a byte into `al`.
-5. Looking for interesting interrupts at [Ralph Brown's Interrupt List](https://www.ctyme.com/rbrown.htm).
+5. Looking for interesting interrupts at [Ralf Brown's Interrupt List](https://www.ctyme.com/rbrown.htm).
 6. Using uninitialized (yet effectively zero'd) memory to our advantage.
 
 Thanks for sticking around!
