@@ -274,9 +274,14 @@ filename: db '4'		; Maintains the filename (saves the NUL terminator since post-
 eof:
 ```
 
-It looks like this when running:
+This is how it looks like this when running:
 
 ![22 bytes solution running in DOSBox](make4_run.gif)
+
+The file's contents are already captured in the code here, but here are the contents for good measure:
+```
+ba 15 01 91 b4 5b cd 21 93 b1 16 87 d6 b4 40 cd 21 ac cd 29 c3 34
+```
 
 ## Conclusions
 This has been a fun challenge! We have covered a lot of cool tricks to minimize our payload, including:
