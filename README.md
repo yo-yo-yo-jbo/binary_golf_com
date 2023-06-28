@@ -147,7 +147,7 @@ int 0x21			; DOS interrupt 21,5B - Create File
 ; B4 40
 ; CD 21
 xchg bx, ax			; File handle (XCHG takes one less byte to encode)
-mov cl, FILE_SIZE		; Bytes to write (CH is already 0 due to previous POP instruction)
+mov cl, FILE_SIZE		; Bytes to write (CH is already 0 due to previous XCHG instruction)
 mov dx, si			; Buffer to write (SI never changed and points to 0x100 - http://www.fysnet.net/yourhelp.htm)
 mov ah, 0x40
 int 0x21			; DOS interrupt 21,40 - Write To File
@@ -204,7 +204,7 @@ int 0x21			; DOS interrupt 21,5B - Create File
 ; B4 40
 ; CD 21
 xchg bx, ax			; File handle (XCHG takes one less byte to encode)
-mov cl, FILE_SIZE		; Bytes to write (CH is already 0 due to previous POP instruction)
+mov cl, FILE_SIZE		; Bytes to write (CH is already 0 due to previous XCHG instruction)
 mov dx, si			; Buffer to write (SI never changed and points to 0x100 - http://www.fysnet.net/yourhelp.htm)
 mov ah, 0x40
 int 0x21			; DOS interrupt 21,40 - Write To File
@@ -256,7 +256,7 @@ int 0x21			; DOS interrupt 21,5B - Create File
 ; B4 40
 ; CD 21
 xchg bx, ax			; File handle (XCHG takes one less byte to encode)
-mov cl, FILE_SIZE		; Bytes to write (CH is already 0 due to previous POP instruction)
+mov cl, FILE_SIZE		; Bytes to write (CH is already 0 due to previous XCHG instruction)
 xchg dx, si			; Exchange DX and SI (SI never changed and points to 0x100 - http://www.fysnet.net/yourhelp.htm)
 mov ah, 0x40
 int 0x21			; DOS interrupt 21,40 - Write To File
