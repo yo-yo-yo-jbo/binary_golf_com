@@ -170,3 +170,56 @@ One idea that I had was living off the land: in the [PSP](https://en.wikipedia.o
 - I still had hopes that somehow I could magically call `INT 20h` and affect the return code. I examined the [DOSBox-X](https://dosbox-x.com) source code and it seems the handler for `INT 21h,4C` calls `DOS_Terminate` with the `DL` value as the exit code. This seems to be the only viable way to save the exit code.
 - The DOS interrupt 21 with `AH=2` writes the character at `DL` as output, and it just so happens the initial `flags` is set to `2`, so the `lahf` insstruction (which takes a single byte) could be useful here. However, there is no gain here as we still need to call `INT 21h` (again) and then `ret`.
 - I thought of writing directly to memory instead of outputting `4`. You can write a character to `0xB800:0` and it will "magically" appear on the screen due to [MMIO](https://en.wikipedia.org/wiki/Memory-mapped_I/O_and_port-mapped_I/O). Unfortunately, I was not able to encode the relevant instructions and gain anything. Also, I was not sure if this is counted as a true output because it does not really write to `STDOUT`, so it doesn't work if the caller redirects output (let's say, to a file).
+
+## Fast Console Output
+Looking at [Ralph Brown's Interrupt List](http://www.ctyme.com/hosting/index.htm) I discovered `INT 29h` - Fast Console Output. It will output the character in the `AL` register, which is quite short. This means we can use the `RET` idea to return to PSP address `0` after printing. This is still `23` bytes, but at least runs on DOSBox:
+
+```assembly
+;
+; Make4.asm
+;
+
+; Constant - the file size
+FILE_SIZE EQU (eof-$$)
+
+; All COM programs start at 0x100
+org 0x100
+
+;
+; BA 16 01
+mov dx, filename		; Saves the filename to create in DX
+
+;
+; 91
+; B4 5B
+; CD 21
+xchg ax, cx			; File attributes (sets to 0 as 0xFF is invalid - http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)
+mov ah, 0x5B
+int 0x21			; DOS interrupt 21,5B - Create File
+
+;
+; 93
+; B1 17
+; 89 F2
+; B4 40
+; CD 21
+xchg bx, ax			; File handle (XCHG takes one less byte to encode)
+mov cl, FILE_SIZE		; Bytes to write (CH is already 0 due to previous POP instruction)
+mov dx, si			; Buffer to write (SI never changed and points to 0x100 - http://www.fysnet.net/yourhelp.htm)
+mov ah, 0x40
+int 0x21			; DOS interrupt 21,40 - Write To File
+
+; B0 34
+; CD 29
+mov al, '4'			; Character to write in AL
+int 0x29			; DOS interrupt 29 - Fast Console Output
+
+; C3
+ret				; Hack - returns to address 0 which has the PSP and effectively runs DOS interrupt 20 - Terminate Program
+
+; 34
+filename: db '4'		; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
+eof:
+```
+
+
