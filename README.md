@@ -275,6 +275,7 @@ eof:
 ```
 
 It looks like this when running:
+
 ![22 bytes solution running in DOSBox](make4_run.gif)
 
 ## Conclusions
@@ -286,5 +287,6 @@ This has been a fun challenge! We have covered a lot of cool tricks to minimize 
 5. Looking for interesting interrupts at [Ralph Brown's Interrupt List](https://www.ctyme.com/rbrown.htm).
 6. Using uninitialized (yet effectively zero'd) memory to our advantage.
 
-Best regards,
-              Jonathan Bar Or
+Thanks for stickin around!
+
+Jonathan Bar Or
