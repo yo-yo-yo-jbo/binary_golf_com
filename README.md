@@ -168,4 +168,4 @@ eof:
 One idea that I had was living off the land: in the [PSP](https://en.wikipedia.org/wiki/Program_Segment_Prefix) at offset `0x50` we see `Unix-like far call entry into DOS (always contains INT 21h + RETF)`. The `INT 21h` part fits us perfectly, but `RETF` is problematic. In fact, even if I could magically make it `C3` (normal `RET`) it'd still require at least `2` bytes each time to `CALL` (calling an address takes `3` bytes, calling a register takes `2` bytes).
 - A similar idea was to reuse addresses we know such as `0:0` (the [Interrupt Vector Table](https://en.wikipedia.org/wiki/Interrupt_vector_table)). Again - too costly to use.
 - I still had hopes that somehow I could magically call `INT 20h` and affect the return code. I examined the [DOSBox-X](https://dosbox-x.com) source code and it seems the handler for `INT 21h,4C` calls `DOS_Terminate` with the `DL` value as the exit code. This seems to be the only viable way to save the exit code.
-- 
+- The DOS interrupt 21 with `AH=2` writes the character at `DL` as output, and it just so happens the initial `flags` is set to `2`, so the `lahf` insstruction (which takes a single byte) could be useful here.
