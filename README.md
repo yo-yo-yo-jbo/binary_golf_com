@@ -273,3 +273,9 @@ ret				; Hack - returns to address 0 which has the PSP and effectively runs DOS 
 filename: db '4'		; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
 eof:
 ```
+
+It looks like this when running:
+![make4_run.gif]
+
+## Conclusions
+W
