@@ -278,4 +278,13 @@ It looks like this when running:
 ![22 bytes solution running in DOSBox](make4_run.gif)
 
 ## Conclusions
-W
+This has been a fun challenge! We have covered a lot of cool tricks to minimize our payload, including:
+1. The structure of COM files and using some interesting [initial register values](http://www.fysnet.net/yourhelp.htm).
+2. Using the [PSP](https://en.wikipedia.org/wiki/Program_Segment_Prefix) to return to address 0 and calling `INT 20h`.
+3. Using `xchg` instead of `mov` can cost one less byte if `ax` is involved.
+4. Using `lodsb` to read a byte into `al`.
+5. Looking for interesting interrupts at [Ralph Brown's Interrupt List](https://www.ctyme.com/rbrown.htm).
+6. Using uninitialized (yet effectively zero'd) memory to our advantage.
+
+Best regards,
+              Jonathan Bar Or
