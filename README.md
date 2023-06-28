@@ -275,7 +275,7 @@ eof:
 ```
 
 It looks like this when running:
-![make4_run.gif]
+![22 bytes solution running in DOSBox](make4_run.gif)
 
 ## Conclusions
 W
