@@ -222,4 +222,54 @@ filename: db '4'		; Maintains the filename (saves the NUL terminator since post-
 eof:
 ```
 
+Can we do better? Note we encode the character `4` twice! Well, I was ableto get to `22` bytes with the following changes:
+1. Replace the `mov dx, si` with `xchg dx, si`. This still encodes as `2` bytes, but now makes `si` point to the last byte of the file (where the character `4` is). Of course, `dx` still gets the `0x100` value from `si`, which is the desired effect.
+2. Replace `mov al, '4'` with `lodsb`! That instruction takes `1` byte only and assigns the value of `ds:[si]` to `al`.
 
+```assembly
+;
+; Make4.asm
+;
+
+; Constant - the file size
+FILE_SIZE EQU (eof-$$)
+
+; All COM programs start at 0x100
+org 0x100
+
+;
+; BA 15 01
+mov dx, filename		; Saves the filename to create in DX
+
+;
+; 91
+; B4 5B
+; CD 21
+xchg ax, cx			; File attributes (sets to 0 as 0xFF is invalid - http://justsolve.archiveteam.org/wiki/DOS/Windows_file_attributes)
+mov ah, 0x5B
+int 0x21			; DOS interrupt 21,5B - Create File
+
+;
+; 93
+; B1 16
+; 87 D6
+; B4 40
+; CD 21
+xchg bx, ax			; File handle (XCHG takes one less byte to encode)
+mov cl, FILE_SIZE		; Bytes to write (CH is already 0 due to previous POP instruction)
+xchg dx, si			; Exchange DX and SI (SI never changed and points to 0x100 - http://www.fysnet.net/yourhelp.htm)
+mov ah, 0x40
+int 0x21			; DOS interrupt 21,40 - Write To File
+
+; AC
+; CD 29
+lodsb				; Load the last byte of the file in AL - was set when exchanging DX and SI before
+int 0x29			; DOS interrupt 29 - Fast Console Output
+
+; C3
+ret				; Hack - returns to address 0 which has the PSP and effectively runs DOS interrupt 20 - Terminate Program
+
+; 34
+filename: db '4'		; Maintains the filename (saves the NUL terminator since post-program chunk if full of zeros)
+eof:
+```
