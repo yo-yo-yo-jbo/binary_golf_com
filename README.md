@@ -302,6 +302,94 @@ This takes `16` bytes to code. The interesting part here is the missing `#!` ([S
 Another idea here is to use `*` to copy - this assumes my script runs alone in the directory.  
 Also, `vim` and other editors usually finish with a linebreak (after `echo 4`) so I made sure to remove it.
 
+### Shell-script COM polyglot
+The idea here was to use the same concepts from the shell script submission but without destroying meaningful register values or memory.  
+For example, let's look at our own submitted shell script - its bytes (`23 21 0a 63 70 20 2a 20 34 0a 65 63 68 6f 20 34`) decode into the following instructions:
+
+```assembly
+and  sp, [bx + di]
+or   ah, [bp + di + 0x70]
+and  [bp + si], ch
+and  [si], dh
+or   ah, [di + 0x63]
+push 0x206f
+```
+
+This is quite destructive - the first instruction effectively assigns `0` to `sp` (not too bad), but the 4th one trashes the beginning of our program (because `si` points there - `0x100`). This is quite problematic since it means we'll have to restore that value!  
+Luckily, we can slightly modify our shell script:
+1. Use other characters instead of line breaks - e.g. `;` or `|`.
+2. Add NUL terminators in some places. Apparently, they are ignored sometimes.
+3. Can call `exit 4` instead of `echo 4`.
+4. Use other whitespaces (`\t` instead of ` `).
+
+I was able to get to the following script:
+
+```assembly
+;
+; Make4.asm
+;
+
+; Constant - the file size
+FILE_SIZE EQU (eof-$$)
+
+; All COM programs start at 0x100
+org 0x100
+
+;
+; Shell script
+; Encodes to garbage commands that ultimately just zero the SP register:
+;	23 21			and  sp, [bx+di]
+; 	0A 63 70		or   ah, [bp+di+0x70]
+;	09 2A			or   [bp+si], bp
+;	09 34			or   [si], si
+;	7C 65			jl   0x0170
+;	78 69			js   0x0176
+;	74 20			je   0x012F
+;	34 00			xor  al, 0x00
+;	0A 23			or   ah, [bp+di]
+db '#!', 0x0A				; Empty interpreter still must be followed by "\n"
+db 'cp', 0x09, '*', 0x09, '4|exit '	; Using "\t" as a separator to avoid destroying program code pointed by SI
+filename:
+db '4', 0				; Adding a NUL terminator (fine by bash) to reuse later in COM code
+db 0x0A, '#'				; Finishing with a "\n" and a remark
+
+;
+; 91
+; BA 0F 01
+; B4 5B
+; CD 21
+xchg cx, ax			; Assign 0 to CX
+mov dx, filename		; Saves the filename to create in DX (reuse data from shell script)
+mov ah, 0x5B
+int 0x21			; Create the file with DOS interrupt 21,5B
+
+;
+; 93
+; B1 16
+; 87 D6
+; B4 40
+; CD 21
+xchg bx, ax			; File handle (XCHG takes one less byte to encode)
+mov cl, FILE_SIZE		; Bytes to write (CH is already 0 due to previous assignment of 0 to CX)
+xchg dx, si			; Exchange DX and SI (SI never changed and points to 0x100 - http://www.fysnet.net/yourhelp.htm)
+mov ah, 0x40
+int 0x21			; DOS interrupt 21,40 - Write To File
+
+; AC
+; CD 29
+lodsb				; Load the last byte of the file in AL - was set when previously exchanging DX and SI
+int 0x29			; DOS interrupt 29 - Fast Console Output
+
+; CD 20
+int 0x20			; DOS interrupt 20 - Terminate Program
+
+eof:
+```
+
+This file weighs `41` bytes but can run both as a COM file and a Linux shell script. Some important notes:
+1. I had to finish the shell script with a line-break and a remark, otherwise `bash` tries to interpret the rest as further commands and writes weird errors to `stderr`.
+2. I had to call `int 0x20` directly, since `sp` was assigned `0` due to the shell script being interpreted as assembly instructions. In fact, `ret` tries to *return to address 0x20CD* (which is the `CD 20` that appears at the beginning of the PSP), which crashes the program.
+
 ## Conclusions
 This has been a fun challenge! We have covered a lot of cool tricks to minimize our payload, including:
 1. The structure of COM files and using some interesting [initial register values](http://www.fysnet.net/yourhelp.htm).
