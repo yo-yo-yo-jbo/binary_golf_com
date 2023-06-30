@@ -391,7 +391,8 @@ eof:
 
 This file weighs `41` bytes but can run both as a COM file and a Linux shell script. Some important notes:
 1. I had to finish the shell script with a line-break and a remark, otherwise `bash` tries to interpret the rest as further commands and writes weird errors to `stderr`.
-2. I had to call `int 0x20` directly, since `sp` was assigned `0` due to the shell script being interpreted as assembly instructions. In fact, `ret` tries to *return to address 0x20CD* (which is the `CD 20` that appears at the beginning of the PSP), which crashes the program.  
+2. I had to call `int 0x20` directly, since `sp` was assigned `0` due to the shell script being interpreted as assembly instructions. In fact, `ret` tries to *return to address 0x20CD* (which is the `CD 20` that appears at the beginning of the PSP), which crashes the program.
+
 Anyway, I've uploaded the source code as [shcom4.asm](shcom4.asm).
 
 ## Conclusions
