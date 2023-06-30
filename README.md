@@ -1,4 +1,4 @@
-# COM and Binary Golf
+# Binary Golf 4 and COM files
 After my fun time with [Dangerous Dave](https://github.com/yo-yo-yo-jbo/dangerous_dave) I've decided to look for more opportunities to play around with Real Mode assembly.  
 It's just so happens that [Binary Golf Grand Prix](https://binary.golf) is happening!  
 For those of you who are unfamiliar, Binary Golf Grand Prix is a competition to generate small files that do a specific task.  
