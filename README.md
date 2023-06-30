@@ -398,6 +398,7 @@ This has been a fun challenge! We have covered a lot of cool tricks to minimize 
 4. Using `lodsb` to read a byte into `al`.
 5. Looking for interesting interrupts at [Ralf Brown's Interrupt List](https://www.ctyme.com/rbrown.htm).
 6. Using uninitialized (yet effectively zero'd) memory to our advantage.
+7. Empty [Shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) tricks and shell scripts using different whitespaces.
 
 Thanks for sticking around!
 
