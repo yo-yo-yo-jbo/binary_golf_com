@@ -20,7 +20,7 @@ As usual, I plan to use [NASM](https://www.nasm.us) as my Assembler of choice.
 
 There are some nice optimizations I discovered while doing this challenge:
 1. It's better to use `xchg bx, ax` than `mov bx, ax` since it's encoded as a single byte... Of course, if you don't care about `ax`.
-2. The program is loaded to `0x100` immidiately after a block called [Program Segment Prefix](https://en.wikipedia.org/wiki/Program_Segment_Prefix) (or PSP for short), which contains some useful information. Unfortunately, it wasn't useful to me.
+2. The program is loaded to `0x100` immidiately after a block called [Program Segment Prefix](https://en.wikipedia.org/wiki/Program_Segment_Prefix) (or PSP for short), which contains some useful information.
 3. It's better to use `int 0x20` than `int 0x21` to temrinate the program since you don't have to set any other registers.
 4. The memory after the program is filled with zeros. Since I needed the NUL terminated string `4\x00` it saved me one byte.
 5. There's very good documentation regarding initial register values when your program starts running ([here](http://www.fysnet.net/yourhelp.htm)). Specifically, I used the fact that `si` is `0x100` to my benefit, and the initial value of `0xFF` assigned to `CX` had to be dealt with.
