@@ -407,4 +407,4 @@ This has been a fun challenge! We have covered a lot of cool tricks to minimize 
 
 Thanks for sticking around!
 
-Jonathan Bar Or
+Jonathan Bar Or (https://jonathanbaror.com)
